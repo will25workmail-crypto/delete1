@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Today's Leads</title>
+<style>
+  html,body{margin:0;padding:0;height:100vh;width:100vw;background:#fff;overflow:hidden;display:flex;justify-content:center;align-items:center;}
+  .board{width:380px;height:844px;background:#fff;display:flex;flex-direction:column;border:1px solid #ddd;}
+  h1{margin:0;padding:20px 0;text-align:center;font-size:2.9rem;color:#000;background:#fff;flex-shrink:0;}
+  .leads-list{flex:1;overflow-y:auto;padding:30px 20px 20px;}
+  .lead-box{
+    margin:35px 0;
+    padding:35px;
+    border-radius:22px;
+    background:#f8f8f8;
+    border:2px solid #ccc;
+    color:#000;
+    font-size:1.9rem;
+    font-weight:600;
+    text-align:center;
+    cursor:pointer;
+    transition:0.3s;
+  }
+  .lead-box:hover{transform:translateY(-6px);box-shadow:0 12px 30px rgba(0,0,0,0.1);}
+  footer{background:#fff;color:#666;padding:12px;font-size:0.9rem;text-align:center;flex-shrink:0;}
+  #popup{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;justify-content:center;align-items:center;z-index:100;}
+  .popup{
+    width:340px;background:#fff;padding:40px 30px;border-radius:25px;
+    border:1px solid #ccc;
+  }
+  .close{position:absolute;top:12px;right:18px;font-size:2.5rem;color:#666;cursor:pointer;}
+  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:35px;}
+  .popup-name{font-size:2.7rem;font-weight:700;color:#000;}
+  .clock{
+    font-size:2.9rem;font-weight:900;color:#000;background:#eee;padding:10px 22px;border-radius:12px;
+    border:2px solid #bbb;
+  }
+  .info-grid{gap:22px;}
+  .row{display:flex;align-items:flex-start;gap:18px;}
+  .label{color:#666;font-size:1.5rem;font-weight:500;width:85px;flex-shrink:0;}
+  .value{
+    color:#000;font-size:1.7rem;font-weight:600;
+    line-height:1.4;
+    word-wrap:break-word;
+    overflow-wrap:anywhere;
+  }
+</style>
+</head>
+<body>
+<div class="board">
+  <h1>TODAY'S LEADS</h1>
+  <div class="leads-list" id="list"></div>
+  <footer id="footer">Loading...</footer>
+</div>
+<div id="popup" onclick="this.style.display='none'">
+  <div class="popup" onclick="event.stopPropagation()">
+    <div class="close" onclick="document.getElementById('popup').style.display='none'">×</div>
+    <div class="top">
+      <div class="popup-name" id="name">William</div>
+      <div class="clock" id="clock">10:30</div>
+    </div>
+    <div class="info-grid">
+      <div class="row"><div class="label">Type:</div><div class="value" id="type">hot</div></div>
+      <div class="row"><div class="label">Phone:</div><div class="value" id="phone">+33 0781257956</div></div>
+      <div class="row"><div class="label">Email:</div><div class="value" id="email">will25workmail@gmail.com</div></div>
+      <div class="row"><div class="label">Budget:</div><div class="value" id="budget">1000000</div></div>
+      <div class="row"><div class="label">Vehicle:</div><div class="value" id="vehicle">Toyota Mustang 2020</div></div>
+      <div class="row"><div class="label">Action:</div><div class="value" id="action">meeting</div></div>
+    </div>
+  </div>
+</div>
+<script>
+  const URL = "https://script.google.com/macros/s/AKfycbylhCWpzQsHkgeTLmkyVzo8M6dEiHPcjeJ96PqXFMqlZu0sCDzzQfA6YUOp69aTSiiH9w/exec";
+  const list = document.getElementById("list");
+  function show(r){
+    document.getElementById("name").textContent = r.Name || "—";
+    const time = (r["Booking at"] || "").split("-").pop().trim();
+    document.getElementById("clock").textContent = time || "—";
+    document.getElementById("type").textContent = r["Lead Type"] || "";
+    document.getElementById("phone").textContent = r.Phone || "";
+    document.getElementById("email").textContent = r.Email || "";
+    document.getElementById("budget").textContent = r.Budget || "";
+    document.getElementById("vehicle").textContent = r["Vehicle Type"] || "";
+    document.getElementById("action").textContent = r["Test drive / meeting"] || "";
+    document.getElementById("popup").style.display = "flex";
+  }
+  function load(){
+    fetch(URL)
+      .then(r => r.json())
+      .then(data => {
+        const sheet = data[Object.keys(data)[0]];
+        const headers = sheet[0].map(h => h.toString().trim());
+        list.innerHTML = "";
+        sheet.slice(1).forEach(row => {
+          const lead = {};
+          headers.forEach((h,i) => lead[h] = row[i] || "");
+          const box = document.createElement("div");
+          box.className = "lead-box";
+          box.textContent = lead.Name || "NO NAME";
+          box.onclick = () => show(lead);
+          list.appendChild(box);
+        });
+        document.getElementById("footer").textContent = "Updated " + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+      })
+      .catch(err => {
+        list.innerHTML = "<div style='color:red;text-align:center;padding:20px;'>Load failed</div>";
+      });
+  }
+  load();
+  setInterval(load, 30000);
+</script>
+</body>
+</html>
